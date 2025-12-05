@@ -536,7 +536,8 @@ const cn = {
       },
       CustomModel: {
         Title: "自定义模型名",
-        SubTitle: "增加自定义模型可选项，使用英文逗号隔开",
+        SubTitle:
+          "增加自定义模型可选项，使用英文逗号隔开。支持：模型名、+模型名（启用）、-模型名（禁用）、-all（禁用全部）、provider:提供商名（按提供商过滤，如 -provider:OpenAI 禁用所有OpenAI模型）",
       },
       AI302: {
         ApiKey: {

@@ -88,6 +88,17 @@ export function collectModelTable(
         Object.values(modelTable).forEach(
           (model) => (model.available = available),
         );
+      } else if (name.startsWith("provider:")) {
+        // Handle provider-based filtering: provider:OpenAI or provider:openai
+        const targetProvider = name.slice(9).toLowerCase(); // Remove "provider:" prefix
+        Object.values(modelTable).forEach((model) => {
+          if (
+            model.provider?.id === targetProvider ||
+            model.provider?.providerName.toLowerCase() === targetProvider
+          ) {
+            model.available = available;
+          }
+        });
       } else {
         // 1. find model by name, and set available value
         const [customModelName, customProviderName] = getModelProvider(name);
