@@ -493,6 +493,7 @@ export function Selector<T>(props: {
       ? [props.defaultSelectedValue]
       : [],
   );
+  const [searchText, setSearchText] = useState("");
 
   const handleSelection = (e: MouseEvent, value: T) => {
     if (props.multiple) {
@@ -509,44 +510,72 @@ export function Selector<T>(props: {
     }
   };
 
+  const filteredItems = props.items.filter((item) => {
+    if (!searchText) return true;
+    const searchLower = searchText.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(searchLower) ||
+      item.subTitle?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className={styles["selector"]} onClick={() => props.onClose?.()}>
-      <div className={styles["selector-content"]}>
+      <div
+        className={styles["selector-content"]}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles["selector-search"]}>
+          <input
+            type="text"
+            className={styles["selector-search-input"]}
+            placeholder={Locale.UI.SearchPlaceholder}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
         <List>
-          {props.items.map((item, i) => {
-            const selected = selectedValues.includes(item.value);
-            return (
-              <ListItem
-                className={clsx(styles["selector-item"], {
-                  [styles["selector-item-disabled"]]: item.disable,
-                })}
-                key={i}
-                title={item.title}
-                subTitle={item.subTitle}
-                icon={<Avatar model={item.value as string} />}
-                onClick={(e) => {
-                  if (item.disable) {
-                    e.stopPropagation();
-                  } else {
-                    handleSelection(e, item.value);
-                  }
-                }}
-              >
-                {selected ? (
-                  <div
-                    style={{
-                      height: 10,
-                      width: 10,
-                      backgroundColor: "var(--primary)",
-                      borderRadius: 10,
-                    }}
-                  ></div>
-                ) : (
-                  <></>
-                )}
-              </ListItem>
-            );
-          })}
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item, i) => {
+              const selected = selectedValues.includes(item.value);
+              return (
+                <ListItem
+                  className={clsx(styles["selector-item"], {
+                    [styles["selector-item-disabled"]]: item.disable,
+                  })}
+                  key={i}
+                  title={item.title}
+                  subTitle={item.subTitle}
+                  icon={<Avatar model={item.value as string} />}
+                  onClick={(e) => {
+                    if (item.disable) {
+                      e.stopPropagation();
+                    } else {
+                      handleSelection(e, item.value);
+                    }
+                  }}
+                >
+                  {selected ? (
+                    <div
+                      style={{
+                        height: 10,
+                        width: 10,
+                        backgroundColor: "var(--primary)",
+                        borderRadius: 10,
+                      }}
+                    ></div>
+                  ) : (
+                    <></>
+                  )}
+                </ListItem>
+              );
+            })
+          ) : (
+            <div className={styles["selector-no-results"]}>
+              {Locale.UI.NoResults}
+            </div>
+          )}
         </List>
       </div>
     </div>

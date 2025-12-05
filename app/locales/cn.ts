@@ -796,6 +796,8 @@ const cn = {
     Import: "导入",
     Sync: "同步",
     Config: "配置",
+    SearchPlaceholder: "搜索模型...",
+    NoResults: "未找到匹配的模型",
   },
   Exporter: {
     Description: {

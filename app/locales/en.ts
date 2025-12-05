@@ -801,6 +801,8 @@ const en: LocaleType = {
     Import: "Import",
     Sync: "Sync",
     Config: "Config",
+    SearchPlaceholder: "Search models...",
+    NoResults: "No matching models found",
   },
   Exporter: {
     Description: {
