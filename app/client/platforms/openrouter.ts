@@ -129,10 +129,26 @@ export class OpenRouterApi implements LLMApi {
       },
     };
 
+    // OpenRouter 要求模型 ID 格式为 provider/model-name
+    // 确保模型名称包含 '/' 字符
+    let modelId = modelConfig.model;
+    console.log("[OpenRouter] Original model ID:", modelId);
+
+    // 如果模型 ID 不包含 '/'，可能是格式错误
+    if (!modelId.includes("/")) {
+      console.error(
+        "[OpenRouter] Invalid model ID format. Expected 'provider/model-name', got:",
+        modelId,
+      );
+      throw new Error(
+        `Invalid OpenRouter model ID: ${modelId}. Format should be 'provider/model-name' (e.g., 'openai/gpt-4o')`,
+      );
+    }
+
     const requestPayload: RequestPayload = {
       messages,
       stream: options.config.stream,
-      model: modelConfig.model,
+      model: modelId,
       temperature: modelConfig.temperature,
       presence_penalty: modelConfig.presence_penalty,
       frequency_penalty: modelConfig.frequency_penalty,
@@ -333,4 +349,3 @@ export class OpenRouterApi implements LLMApi {
     }
   }
 }
-

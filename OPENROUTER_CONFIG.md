@@ -62,10 +62,25 @@ OpenRouter 支持**自动获取模型列表**功能！系统会通过 [OpenRoute
 
 1. 配置好 API Key 后，OpenRouter 的模型会**自动显示在模型列表的最顶部**
 2. 在模型选择器中可以看到所有 OpenRouter 提供的模型
-3. 选择你想使用的模型
+3. 选择你想使用的模型（格式为 `provider/model-name`）
 4. 开始对话
 
 > 💡 **提示**：OpenRouter 提供商的排序优先级为 0，会优先显示在所有其他提供商之前。
+
+### 正确的模型选择示例
+
+在模型选择器中，OpenRouter 的模型应该显示为：
+
+```
+📋 OpenRouter
+  ├─ openai/gpt-4o
+  ├─ openai/gpt-4o-mini
+  ├─ anthropic/claude-3.5-sonnet
+  ├─ google/gemini-pro-1.5
+  └─ ...更多模型
+```
+
+**重要**：模型名称必须包含斜杠 `/`，这是 OpenRouter 的标准格式。
 
 ## 注意事项
 
@@ -74,6 +89,27 @@ OpenRouter 支持**自动获取模型列表**功能！系统会通过 [OpenRoute
 - 确保你的账户有足够的余额
 
 ## 故障排除
+
+### ❌ 错误："invalid model ID"
+
+这个错误表示模型 ID 格式不正确。OpenRouter 要求模型 ID 必须使用 `provider/model-name` 格式。
+
+**解决方法：**
+
+1. **检查模型格式**：确保选择的模型 ID 包含斜杠 `/`
+   - ✅ 正确：`openai/gpt-4o`
+   - ✅ 正确：`anthropic/claude-3.5-sonnet`
+   - ❌ 错误：`gpt-4o`（缺少提供商前缀）
+   - ❌ 错误：`claude-3.5-sonnet`（缺少提供商前缀）
+
+2. **使用自动获取的模型列表**：系统会自动从 OpenRouter 获取正确格式的模型列表，建议直接从列表中选择
+
+3. **检查浏览器控制台**：打开开发者工具，查看详细的错误日志：
+   ```
+   [OpenRouter] Original model ID: xxx
+   ```
+
+4. **重新加载模型列表**：刷新页面，让系统重新获取最新的模型列表
 
 ### 无法连接到 OpenRouter
 
@@ -86,6 +122,7 @@ OpenRouter 支持**自动获取模型列表**功能！系统会通过 [OpenRoute
 1. 确保 API Key 有效
 2. 检查浏览器控制台是否有错误信息
 3. 尝试刷新页面
+4. 检查是否能访问 `https://openrouter.ai/api/v1/models`
 
 ## 技术细节
 
