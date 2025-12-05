@@ -256,14 +256,34 @@ export function isModelNotavailableInServer(
   const providerNamesArray = Array.isArray(providerNames)
     ? providerNames
     : [providerNames];
+
   for (const providerName of providerNamesArray) {
     // if model provider is bytedance, use model config name to check if not avaliable
     if (providerName === ServiceProvider.ByteDance) {
       return !Object.values(modelTable).filter((v) => v.name === modelName)?.[0]
         ?.available;
     }
+
     const fullName = `${modelName}@${providerName.toLowerCase()}`;
-    if (modelTable?.[fullName]?.available === true) return false;
+
+    // Check if the exact model@provider combination exists in the table
+    if (modelTable[fullName]) {
+      if (modelTable[fullName].available === true) return false;
+    } else {
+      // If the exact combination doesn't exist, check if the provider has any available models
+      // This handles the case where a custom model is used with provider filtering
+      const providerIdLower = providerName.toLowerCase();
+      const hasProviderEnabled = Object.values(modelTable).some(
+        (model) =>
+          (model.provider?.id === providerIdLower ||
+            model.provider?.providerName.toLowerCase() === providerIdLower) &&
+          model.available === true,
+      );
+
+      // If the provider is enabled (has at least one available model),
+      // we consider this custom model as available
+      if (hasProviderEnabled) return false;
+    }
   }
   return true;
 }

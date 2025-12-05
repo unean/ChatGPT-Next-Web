@@ -77,4 +77,64 @@ describe("isModelNotavailableInServer", () => {
     );
     expect(result).toBe(false);
   });
+
+  test("should allow custom models when provider is enabled via provider filtering", () => {
+    const customModels = "-all,provider:OpenRouter";
+    const modelName = "anthropic/claude-haiku-4.5";
+    const providerNames = "OpenRouter";
+    const result = isModelNotavailableInServer(
+      customModels,
+      modelName,
+      providerNames,
+    );
+    expect(result).toBe(false);
+  });
+
+  test("should block custom models when provider is disabled via provider filtering", () => {
+    const customModels = "-all,-provider:OpenRouter";
+    const modelName = "anthropic/claude-haiku-4.5";
+    const providerNames = "OpenRouter";
+    const result = isModelNotavailableInServer(
+      customModels,
+      modelName,
+      providerNames,
+    );
+    expect(result).toBe(true);
+  });
+
+  test("should handle provider filtering with case insensitivity", () => {
+    const customModels = "-all,provider:openrouter";
+    const modelName = "anthropic/claude-haiku-4.5";
+    const providerNames = "OpenRouter";
+    const result = isModelNotavailableInServer(
+      customModels,
+      modelName,
+      providerNames,
+    );
+    expect(result).toBe(false);
+  });
+
+  test("should allow models from enabled provider even if model not in default list", () => {
+    const customModels = "-all,provider:Google";
+    const modelName = "gemini-2.0-flash-exp";
+    const providerNames = "Google";
+    const result = isModelNotavailableInServer(
+      customModels,
+      modelName,
+      providerNames,
+    );
+    expect(result).toBe(false);
+  });
+
+  test("should combine provider filtering with specific model rules", () => {
+    const customModels = "-all,provider:OpenAI,-gpt-4";
+    const modelName = "gpt-4";
+    const providerNames = "OpenAI";
+    const result = isModelNotavailableInServer(
+      customModels,
+      modelName,
+      providerNames,
+    );
+    expect(result).toBe(true);
+  });
 });
