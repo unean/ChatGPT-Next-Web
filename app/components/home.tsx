@@ -223,12 +223,62 @@ function Screen() {
 export function useLoadData() {
   const config = useAppConfig();
 
-  const api: ClientApi = getClientApi(config.modelConfig.providerName);
-
   useEffect(() => {
     (async () => {
-      const models = await api.llm.models();
-      config.mergeModels(models);
+      try {
+        // 先获取服务端配置的可用提供商列表
+        const res = await fetch("/api/models", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const providers = data.providers as {
+            id: string;
+            name: string;
+            providerType: string;
+          }[];
+
+          if (providers && providers.length > 0) {
+            // 对每个可用提供商获取模型列表
+            const allModels = await Promise.all(
+              providers.map(async (provider) => {
+                try {
+                  const api = getClientApi(provider.name as any);
+                  const models = await api.llm.models();
+                  return models;
+                } catch (e) {
+                  console.error(
+                    `[Models] Failed to fetch models for ${provider.name}:`,
+                    e,
+                  );
+                  return [];
+                }
+              }),
+            );
+
+            // 合并所有模型
+            const mergedModels = allModels.flat();
+            if (mergedModels.length > 0) {
+              config.mergeModels(mergedModels);
+            }
+          }
+        } else {
+          // 如果获取提供商列表失败，回退到原来的逻辑
+          const api: ClientApi = getClientApi(config.modelConfig.providerName);
+          const models = await api.llm.models();
+          config.mergeModels(models);
+        }
+      } catch (e) {
+        console.error("[Models] Failed to load models:", e);
+        // 出错时回退到原来的逻辑
+        const api: ClientApi = getClientApi(config.modelConfig.providerName);
+        const models = await api.llm.models();
+        config.mergeModels(models);
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
