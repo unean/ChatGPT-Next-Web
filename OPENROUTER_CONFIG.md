@@ -34,22 +34,38 @@ OPENROUTER_URL=https://openrouter.ai/api  # 可选，默认使用此 URL
 
 ## 支持的模型
 
-OpenRouter 支持多个模型提供商的模型，包括但不限于：
+OpenRouter 支持**自动获取模型列表**功能！系统会通过 [OpenRouter Models API](https://openrouter.ai/docs/api/api-reference/models/get-models) 动态获取所有可用的模型。
 
-- OpenAI (gpt-4o, gpt-4o-mini, gpt-3.5-turbo)
-- Anthropic (claude-3.5-sonnet, claude-3-opus)
-- Google (gemini-pro-1.5, gemini-flash-1.5)
-- Meta (llama-3.1-70b-instruct, llama-3.1-405b-instruct)
-- DeepSeek (deepseek-chat, deepseek-coder)
-- Mistral AI (mistral-large, mistral-medium)
-- Qwen (qwen-2.5-72b-instruct)
-- xAI (grok-2)
+### 内置的默认模型
+
+如果无法获取模型列表，系统会使用以下内置模型：
+
+- OpenAI (openai/gpt-4o, openai/gpt-4o-mini, openai/gpt-3.5-turbo)
+- Anthropic (anthropic/claude-3.5-sonnet, anthropic/claude-3-opus)
+- Google (google/gemini-pro-1.5, google/gemini-flash-1.5)
+- Meta (meta-llama/llama-3.1-70b-instruct, meta-llama/llama-3.1-405b-instruct)
+- DeepSeek (deepseek/deepseek-chat, deepseek/deepseek-coder)
+- Mistral AI (mistralai/mistral-large, mistralai/mistral-medium)
+- Qwen (qwen/qwen-2.5-72b-instruct)
+- xAI (x-ai/grok-2)
+
+### 自动获取的模型
+
+配置好 API Key 后，系统会自动从 OpenRouter 获取所有可用的模型列表，包括：
+- 最新发布的模型
+- 各个提供商的所有可用模型
+- 每个模型的详细信息（context length、pricing 等）
+
+注意：系统会自动过滤出支持文本聊天功能的模型
 
 ## 使用方法
 
-1. 配置好 API Key 后，在模型选择器中选择 OpenRouter 提供商
-2. 选择你想使用的模型
-3. 开始对话
+1. 配置好 API Key 后，OpenRouter 的模型会**自动显示在模型列表的最顶部**
+2. 在模型选择器中可以看到所有 OpenRouter 提供的模型
+3. 选择你想使用的模型
+4. 开始对话
+
+> 💡 **提示**：OpenRouter 提供商的排序优先级为 0，会优先显示在所有其他提供商之前。
 
 ## 注意事项
 
@@ -71,8 +87,29 @@ OpenRouter 支持多个模型提供商的模型，包括但不限于：
 2. 检查浏览器控制台是否有错误信息
 3. 尝试刷新页面
 
+## 技术细节
+
+### 模型列表 API
+
+本项目使用 OpenRouter 的 Models API 自动获取模型列表：
+
+```
+GET https://openrouter.ai/api/v1/models
+Authorization: Bearer YOUR_API_KEY
+```
+
+API 返回的每个模型包含以下信息：
+- 模型 ID 和名称
+- 上下文长度
+- 支持的参数
+- 定价信息
+- 输入/输出模态（text、image、audio 等）
+
+参考文档：[OpenRouter Models API](https://openrouter.ai/docs/api/api-reference/models/get-models)
+
 ## 更多信息
 
 - [OpenRouter 官方文档](https://openrouter.ai/docs)
 - [OpenRouter API 参考](https://openrouter.ai/docs/api-reference)
+- [OpenRouter Models API](https://openrouter.ai/docs/api/api-reference/models/get-models)
 

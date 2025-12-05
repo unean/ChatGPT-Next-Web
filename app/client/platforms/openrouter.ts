@@ -31,13 +31,37 @@ import {
 import { RequestPayload } from "./openai";
 
 import { fetch } from "@/app/utils/stream";
+
+export interface OpenRouterModel {
+  id: string;
+  canonical_slug: string;
+  name: string;
+  description: string;
+  created: number;
+  context_length: number | null;
+  pricing: {
+    prompt: string | number;
+    completion: string | number;
+    request?: string | number;
+    image?: string | number;
+  };
+  architecture: {
+    tokenizer: string;
+    instruct_type: string | null;
+    modality: string | null;
+    input_modalities: string[];
+    output_modalities: string[];
+  };
+  top_provider: {
+    context_length: number | null;
+    max_completion_tokens: number | null;
+    is_moderated: boolean;
+  };
+  supported_parameters: string[];
+}
+
 export interface OpenRouterListModelResponse {
-  object: string;
-  data: Array<{
-    id: string;
-    object: string;
-    root: string;
-  }>;
+  data: OpenRouterModel[];
 }
 
 export class OpenRouterApi implements LLMApi {
@@ -256,33 +280,57 @@ export class OpenRouterApi implements LLMApi {
       return DEFAULT_MODELS.slice();
     }
 
-    const res = await fetch(this.path(OpenRouterConfig.ListModelPath), {
-      method: "GET",
-      headers: {
-        ...getHeaders(),
-      },
-    });
+    try {
+      const res = await fetch(this.path(OpenRouterConfig.ListModelPath), {
+        method: "GET",
+        headers: {
+          ...getHeaders(),
+        },
+      });
 
-    const resJson = (await res.json()) as OpenRouterListModelResponse;
-    const chatModels = resJson.data;
-    console.log("[Models]", chatModels);
+      if (!res.ok) {
+        console.error("[OpenRouter] Failed to fetch models:", res.status);
+        return DEFAULT_MODELS.filter(
+          (m) => m.provider.providerType === "openrouter",
+        );
+      }
 
-    if (!chatModels) {
-      return [];
+      const resJson = (await res.json()) as OpenRouterListModelResponse;
+      const chatModels = resJson.data;
+      console.log("[OpenRouter Models]", chatModels?.length, "models found");
+
+      if (!chatModels || chatModels.length === 0) {
+        return DEFAULT_MODELS.filter(
+          (m) => m.provider.providerType === "openrouter",
+        );
+      }
+
+      // 过滤出支持聊天的模型（text output modality）
+      const textModels = chatModels.filter(
+        (m) =>
+          m.architecture?.output_modalities?.includes("text") ||
+          m.architecture?.modality === "text->text",
+      );
+
+      let seq = 0; // OpenRouter 模型从 0 开始排序，显示在最前面
+      return textModels.map((m) => ({
+        name: m.id,
+        displayName: m.name,
+        available: true,
+        sorted: seq++,
+        provider: {
+          id: "openrouter",
+          providerName: "OpenRouter",
+          providerType: "openrouter",
+          sorted: 0, // 排序值为 0，显示在最前面
+        },
+      }));
+    } catch (e) {
+      console.error("[OpenRouter] Error fetching models:", e);
+      return DEFAULT_MODELS.filter(
+        (m) => m.provider.providerType === "openrouter",
+      );
     }
-
-    let seq = 1000; //同 Constant.ts 中的排序保持一致
-    return chatModels.map((m) => ({
-      name: m.id,
-      available: true,
-      sorted: seq++,
-      provider: {
-        id: "openrouter",
-        providerName: "OpenRouter",
-        providerType: "openrouter",
-        sorted: 16,
-      },
-    }));
   }
 }
 

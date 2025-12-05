@@ -771,8 +771,20 @@ const openrouterModels = [
   "x-ai/grok-2",
 ];
 
-let seq = 1000; // 内置的模型序号生成器从1000开始
+let seq = 0; // 内置的模型序号生成器从0开始
 export const DEFAULT_MODELS = [
+  // OpenRouter 放在最前面
+  ...openrouterModels.map((name) => ({
+    name,
+    available: true,
+    sorted: seq++,
+    provider: {
+      id: "openrouter",
+      providerName: "OpenRouter",
+      providerType: "openrouter",
+      sorted: 0, // 排序值为0，显示在最前面
+    },
+  })),
   ...openaiModels.map((name) => ({
     name,
     available: true,
@@ -936,17 +948,6 @@ export const DEFAULT_MODELS = [
       providerName: "302.AI",
       providerType: "ai302",
       sorted: 15,
-    },
-  })),
-  ...openrouterModels.map((name) => ({
-    name,
-    available: true,
-    sorted: seq++,
-    provider: {
-      id: "openrouter",
-      providerName: "OpenRouter",
-      providerType: "openrouter",
-      sorted: 16,
     },
   })),
 ] as const;
