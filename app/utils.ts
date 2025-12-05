@@ -280,10 +280,39 @@ export function getMessageImages(message: RequestMessage): string[] {
   return urls;
 }
 
+/**
+ * 检查 OpenRouter 模型是否支持视觉输入（图片或视频）
+ * 通过查询存储的模型能力信息来判断
+ */
+export function isOpenRouterVisionModel(modelName: string): boolean {
+  try {
+    const { useAppConfig } = require("./store/config");
+    const models = useAppConfig.getState().models;
+
+    // 查找匹配的 OpenRouter 模型
+    const model = models.find(
+      (m: any) =>
+        m.name === modelName && m.provider?.providerType === "openrouter",
+    );
+
+    if (model?.capabilities) {
+      // 如果有能力信息，使用它来判断
+      return (
+        model.capabilities.vision === true || model.capabilities.video === true
+      );
+    }
+  } catch (e) {
+    console.warn("[OpenRouter] Failed to check vision capability:", e);
+  }
+
+  // 如果没有找到模型信息，返回 false
+  return false;
+}
+
 export function isVisionModel(model: string) {
   const visionModels = useAccessStore.getState().visionModels;
   const envVisionModels = visionModels?.split(",").map((m) => m.trim());
-  if (envVisionModels?.includes(model)) {
+  if (isOpenRouterVisionModel(model) || envVisionModels?.includes(model)) {
     return true;
   }
   return (

@@ -26,6 +26,7 @@ import {
   getMessageTextContent,
   getMessageTextContentWithoutThinking,
   isVisionModel,
+  isOpenRouterVisionModel,
   getTimeoutMSByModel,
 } from "@/app/utils";
 import { RequestPayload } from "./openai";
@@ -106,7 +107,21 @@ export class OpenRouterApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
-    const visionModel = isVisionModel(options.config.model);
+    // 对于 OpenRouter 模型，优先使用模型能力信息判断是否支持视觉
+    // 如果没有能力信息，则回退到通用的正则表达式判断
+    const isOpenRouterModel = options.config.model.includes("/");
+    const visionModel = isOpenRouterModel
+      ? isOpenRouterVisionModel(options.config.model) ||
+        isVisionModel(options.config.model)
+      : isVisionModel(options.config.model);
+
+    console.log(
+      "[OpenRouter] Model:",
+      options.config.model,
+      "Vision support:",
+      visionModel,
+    );
+
     const messages: ChatOptions["messages"] = [];
     for (const v of options.messages) {
       if (v.role === "assistant") {
@@ -329,18 +344,30 @@ export class OpenRouterApi implements LLMApi {
       );
 
       let seq = 0; // OpenRouter 模型从 0 开始排序，显示在最前面
-      return textModels.map((m) => ({
-        name: m.id,
-        displayName: m.name,
-        available: true,
-        sorted: seq++,
-        provider: {
-          id: "openrouter",
-          providerName: "OpenRouter",
-          providerType: "openrouter",
-          sorted: 0, // 排序值为 0，显示在最前面
-        },
-      }));
+      return textModels.map((m) => {
+        // 检查模型是否支持图片和视频输入
+        const inputModalities = m.architecture?.input_modalities || [];
+        const supportsImage = inputModalities.includes("image");
+        const supportsVideo = inputModalities.includes("video");
+
+        return {
+          name: m.id,
+          displayName: m.name,
+          available: true,
+          sorted: seq++,
+          provider: {
+            id: "openrouter",
+            providerName: "OpenRouter",
+            providerType: "openrouter",
+            sorted: 0, // 排序值为 0，显示在最前面
+          },
+          capabilities: {
+            vision: supportsImage,
+            video: supportsVideo,
+            inputModalities: inputModalities,
+          },
+        };
+      });
     } catch (e) {
       console.error("[OpenRouter] Error fetching models:", e);
       return DEFAULT_MODELS.filter(

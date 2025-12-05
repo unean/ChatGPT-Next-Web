@@ -97,6 +97,11 @@ export interface LLMModel {
   available: boolean;
   provider: LLMModelProvider;
   sorted: number;
+  capabilities?: {
+    vision?: boolean; // 支持图片输入
+    video?: boolean; // 支持视频输入
+    inputModalities?: string[]; // 原始的输入模态信息（用于 OpenRouter）
+  };
 }
 
 export interface LLMModelProvider {
